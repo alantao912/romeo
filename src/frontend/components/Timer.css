@@ -1,0 +1,27 @@
+
+.timer-display {
+    background-color: white;
+    color: black;
+    padding-top: 3px;
+    padding-bottom: 3px;
+
+    padding-left: 7px;
+    padding-right: 7px;
+
+    user-select: none;
+    border-style: solid;
+}
+
+.timer-display-warning {
+    background-color: white;
+    color: black;
+    padding-top: 3px;
+    padding-bottom: 3px;
+
+    padding-left: 7px;
+    padding-right: 7px;
+
+    user-select: none;
+    border-style: solid;
+    filter: drop-shadow(0 0 2em #ed2f2faa);
+}
