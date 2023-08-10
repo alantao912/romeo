@@ -7,16 +7,56 @@ import { Chessboard } from 'react-chessboard';
 import Timer from './components/Timer';
 import './HomePage.css';
 
-function HomePage() : JSX.Element {
+interface HomePageProps {
+    playerColor: string;
+}
+
+interface ReturnValue {
+    isLegal: boolean;
+    newPosition: string;
+}
+
+function HomePage({ playerColor } : HomePageProps) : JSX.Element {
     const [ state, setState ] = useState(0);
     const [ turn, setTurn ] = useState(0);
 
     const [game, setGame] = useState(new Chess());
 
-    async function getEngineMove() {
-        const gameCopy: Chess = new Chess(game.fen());
-        
-        setGame(gameCopy);
+    async function getEngineMove(fen: string) {
+        const headers: Headers = new Headers();
+        headers.set('Content-Type', 'application/json');
+        headers.set('Accept', 'application/json');
+
+        const request: RequestInfo = new Request('http://localhost:3000/chess', {
+            // We need to set the `method` to `POST` and assign the headers
+            method: 'POST',
+            headers: headers,
+            // Convert the user object to JSON and pass it as the body
+            body: JSON.stringify({ position: fen, remainingTime: 100000})
+        })
+        // Send the request and print the response
+        fetch(request).then(res => {
+            return res.json();
+        }).then(res => {
+            const gameCopy: Chess = new Chess(fen);
+            const bestMove: string = res.bestmove;
+            try {
+                let prom: string = "";
+                if (bestMove.length === 5) {
+                    prom = bestMove[4];
+                }
+                gameCopy.move({ from: bestMove.substring(0, 2), to: bestMove.substring(2, 4), promotion: prom});
+                setGame(gameCopy);
+                setTurn(2);
+            } 
+            catch {
+                console.log("Engine returned illegal move");
+                console.log(bestMove);
+                console.log(gameCopy.fen());
+            }
+        }).catch(error => {
+            console.log("Caught error: " + error);
+        });
     }
 
     switch (state) {
@@ -33,10 +73,9 @@ function HomePage() : JSX.Element {
                 </>
             );
         case 1:
-            let playerColor: string = (Date.now() % 2 == 0 ? "w" : "b");
-            function onDrop(sourceSquare: Square, targetSquare: Square, piece : string) : boolean {
+            function onDrop(sourceSquare: Square, targetSquare: Square, piece : string) : ReturnValue {
                 if (playerColor !== String(piece[0])) {
-                    return false;
+                    return { isLegal: false, newPosition: ""};
                 }
                 const gameCopy: Chess = new Chess(game.fen());
                 try {
@@ -44,28 +83,14 @@ function HomePage() : JSX.Element {
                     setGame(gameCopy);
                 } 
                 catch {
-                    return false;
+                    return { isLegal: false, newPosition: ""};
                 }
-                
-                switch (turn) {
-                    case 0:
-                        setTurn(1);
-                        break;
-                    case 1:
-                        setTurn(2);
-                        break;
-                    case 2:
-                        setTurn(1);
-                        break;
-                }
-                getEngineMove();
-                return true;
+                setTurn(1);
+                return { isLegal: true, newPosition: gameCopy.fen() };
             }
 
             if (turn == 0 && playerColor === "b") {
-                setTurn(1);
-                getEngineMove();
-                setTurn(2);
+                
             }
 
             return (
@@ -78,7 +103,15 @@ function HomePage() : JSX.Element {
                         id="chessboard"
                         position={ game.fen() }
                         boardOrientation={playerColor === "w" ? "white" : "black"}
-                        onPieceDrop={onDrop}
+                        onPieceDrop={
+                            (x, y, z) => {
+                            let result: ReturnValue = onDrop(x, y, z);
+                            if (result.isLegal) {
+                                getEngineMove(result.newPosition);
+                                return true;
+                            }
+                            return false;
+                        }}
                         areArrowsAllowed={true} 
                         boardWidth={850} 
                         showPromotionDialog={true}
