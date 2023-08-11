@@ -1,5 +1,5 @@
 import julietteLogo from "./assets/juliette-logo.png";
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { Chess, Square } from 'chess.js';
 import { Chessboard } from 'react-chessboard';
@@ -16,13 +16,46 @@ interface ReturnValue {
     newPosition: string;
 }
 
+let lossReason: string = "";
+let firstMove: boolean = false;
+
+function getHistory(history: string[]) : string {
+    let output: string = "";
+    history.map((item) => { 
+        output += item; 
+        console.log(item);
+    });
+    return output;
+}
+
 function HomePage({ playerColor } : HomePageProps) : JSX.Element {
     const [ state, setState ] = useState(0);
-    const [ turn, setTurn ] = useState(0);
+    const [ turn, setTurn ] = useState(playerColor === "w" ? 2 : 0);
 
-    const [game, setGame] = useState(new Chess());
+    const [ game, setGame ] = useState(new Chess());
 
-    async function getEngineMove(fen: string) {
+    const [ playerTime, setPlayerTime ] = useState(3000);
+    const [ engineTime, setEngineTime ] = useState(3000);
+
+    const [ numEngineMoves, setNumEngineMoves ] = useState(0);
+
+    useEffect(() => {
+        if (numEngineMoves != 0) {
+            setTimeout(() => setEngineTime(engineTime + 50), 100);
+        }
+    }, [numEngineMoves]);
+
+    useEffect(() => {
+        if (game.isCheckmate()) {
+            lossReason = "Checkmate!";
+            setTimeout(() => {setState(2);}, 500);
+        } else if (game.isDraw()) {
+            lossReason = "Draw";
+            setTimeout(() => {setState(2);}, 500);
+        }
+    }, [ game ]);
+
+    function getEngineMove(fen: string) {
         const headers: Headers = new Headers();
         headers.set('Content-Type', 'application/json');
         headers.set('Accept', 'application/json');
@@ -32,12 +65,10 @@ function HomePage({ playerColor } : HomePageProps) : JSX.Element {
             method: 'POST',
             headers: headers,
             // Convert the user object to JSON and pass it as the body
-            body: JSON.stringify({ position: fen, remainingTime: 100000})
-        })
-        // Send the request and print the response
-        fetch(request).then(res => {
-            return res.json();
-        }).then(res => {
+            body: JSON.stringify({ position: fen, remainingTime: 100 * engineTime})
+        });
+
+        fetch(request).then(res => res.json()).then(res => {
             const gameCopy: Chess = new Chess(fen);
             const bestMove: string = res.bestmove;
             try {
@@ -47,12 +78,12 @@ function HomePage({ playerColor } : HomePageProps) : JSX.Element {
                 }
                 gameCopy.move({ from: bestMove.substring(0, 2), to: bestMove.substring(2, 4), promotion: prom});
                 setGame(gameCopy);
+                setNumEngineMoves(numEngineMoves + 1);
                 setTurn(2);
             } 
             catch {
-                console.log("Engine returned illegal move");
-                console.log(bestMove);
-                console.log(gameCopy.fen());
+                lossReason = "juliette made illegal move!";
+                setState(2);
             }
         }).catch(error => {
             console.log("Caught error: " + error);
@@ -86,49 +117,94 @@ function HomePage({ playerColor } : HomePageProps) : JSX.Element {
                     return { isLegal: false, newPosition: ""};
                 }
                 setTurn(1);
+                setTimeout(() => setPlayerTime(playerTime + 50), 100);
                 return { isLegal: true, newPosition: gameCopy.fen() };
             }
 
-            if (turn == 0 && playerColor === "b") {
-                
+            if (turn === 2) {
+                // player turn
+                setTimeout(() => {
+                    if (playerTime > 0) {
+                        setPlayerTime(playerTime - 1);
+                    } else {
+                        lossReason = "Player flagged!";
+                        setState(2);
+                    }
+                }, 100);
+            } else if (turn === 1 || turn === 0) {
+                // engine turn
+                setTimeout(() => {
+                    if (engineTime > 0) {
+                        setEngineTime(engineTime - 1);
+                    } else {
+                        lossReason = "juliette flagged!";
+                        setState(2);
+                    }
+                }, 100);
+            }
+
+            if (!firstMove && playerColor === "b") {
+                firstMove = true;
+                getEngineMove(game.fen());
             }
 
             return (
-                <div className="play-area">
-                    <div className="player-one-display">
-                        <Timer startTime="3000" onFlag={() => setState(2)} isRunning={() => turn == 1}/>
-                        <h4 className="engine-label"> juliette </h4>
+                <div className="board-area">
+                    <div className="play-area">
+                        <div className="player-one-display">
+                            <Timer remainingTime={ engineTime } isRunning={turn === 1 || turn === 0} />
+                            <h4 className="engine-label"> juliette </h4>
+                        </div>
+                        <Chessboard 
+                            id="chessboard"
+                            position={ game.fen() }
+                            boardOrientation={playerColor === "w" ? "white" : "black"}
+                            onPieceDrop={
+                                (x, y, z) => {
+                                let result: ReturnValue = onDrop(x, y, z);
+                                if (result.isLegal) {
+                                    getEngineMove(result.newPosition);
+                                    return true;
+                                }
+                                return false;
+                            }}
+                            areArrowsAllowed={true} 
+                            boardWidth={850} 
+                            showPromotionDialog={true}
+                            customBoardStyle={{
+                                borderRadius: "4px",
+                                boxShadow: "0 2px 10px rgba(0, 0, 0, 0.5)",
+                            }}
+                        />
+                        <div className="player-two-display">
+                            <h4 className="player-label"> Player </h4>
+                            <Timer remainingTime={ playerTime } isRunning={turn === 2} />
+                        </div>
                     </div>
-                    <Chessboard 
-                        id="chessboard"
-                        position={ game.fen() }
-                        boardOrientation={playerColor === "w" ? "white" : "black"}
-                        onPieceDrop={
-                            (x, y, z) => {
-                            let result: ReturnValue = onDrop(x, y, z);
-                            if (result.isLegal) {
-                                getEngineMove(result.newPosition);
-                                return true;
-                            }
-                            return false;
-                        }}
-                        areArrowsAllowed={true} 
-                        boardWidth={850} 
-                        showPromotionDialog={true}
-                        customBoardStyle={{
-                            borderRadius: "4px",
-                            boxShadow: "0 2px 10px rgba(0, 0, 0, 0.5)",
-                        }}
-                    />
-                    <div className="player-two-display">
-                        <h4 className="player-label"> Player </h4>
-                        <Timer startTime="3000" onFlag={() => setState(2)} isRunning={() => turn == 2}/>
-                    </div>
+
+                    <button className="resign-button" onClick={() => {
+                        lossReason="juliette wins by resignation!";
+                        setState(2);
+                    }}> Resign </button>
                 </div>
             );
         case 2:
             return (
-                <p> Game Over! </p>
+                <>
+                    <h3> Game Over! </h3>
+                    <p> { lossReason } </p>
+                    <button className="end-screen-button" onClick={() => {
+                        navigator.clipboard.writeText(getHistory(game.history({verbose: false})));
+                    }}> Copy PGN </button>
+
+                    <button className="end-screen-button" onClick={() => {
+                        setState(0);
+                        game.reset();
+                        setEngineTime(3000);
+                        setPlayerTime(3000);
+                        setTurn(playerColor === "w" ? 2 : 0)
+                    }}> Home </button>
+                </>
             );
         default:
             return <p> Error </p>

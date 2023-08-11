@@ -17,14 +17,17 @@ app.post('/chess', jsonParser, function(req, res, next) {
     child.stdin.write("uci\n");
     child.stdin.write("ucinewgame\n");
     child.stdin.write("position " + req.body.position + " \n");
-    child.stdin.write("go movetime " + String(req.body.remainingTime) + "\n");
+    const remainingTime = String(req.body.remainingTime);
+    child.stdin.write("go wtime " + remainingTime + " btime " + remainingTime + " winc 5000 binc 5000 \n");
     child.stdout.on('data', function(data) {
         const flag = "bestmove: ";
         let flagIndex = data.toString().indexOf(flag);
         if (flagIndex !== -1) {
+            child.kill('SIGINT');
             res.json({"bestmove" : data.toString().substring(flagIndex + flag.length).trim()});
         }
     });
+    console.log(req.body.remainingTime);
 });
 
 

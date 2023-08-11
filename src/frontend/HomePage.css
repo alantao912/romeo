@@ -82,3 +82,18 @@
 .chessboard:hover {
     filter: drop-shadow(0 0 8em white)
 }
+
+.end-screen-button {
+    margin: 4px;
+}
+
+.board-area {
+    display: flex;
+    flex-direction: row;
+
+    align-items: center;
+}
+
+.resign-button {
+    margin: 30px;
+}

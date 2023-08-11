@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import './Timer.css';
 
 function formatTime(time: number) : string {
@@ -15,27 +14,17 @@ function formatTime(time: number) : string {
 }
 
 interface TimerProps {
-    startTime: string;
-    onFlag: Function;
-    isRunning: Function;
+    remainingTime: number;
+    isRunning: boolean;
 };
 
-function Timer({startTime, onFlag, isRunning}: TimerProps) : JSX.Element {
-    const [ milliseconds, setMilliseconds] = useState(parseInt(startTime));
-
-    if (isRunning()) {
-        if (milliseconds > 0) {
-            setTimeout(() => { setMilliseconds(milliseconds - 1)}, 100);
-        } else {
-            onFlag();
-        }
-    }
+function Timer({remainingTime, isRunning }: TimerProps) : JSX.Element {
 
     let cName: string = "timer-display";
-    if (isRunning() && milliseconds <= 30 && milliseconds > 0 && milliseconds % 10 >= 6) {
+    if (isRunning && remainingTime <= 300 && remainingTime > 0 && remainingTime % 10 >= 6) {
         cName += "-warning";
     }
-    return <h4 className={cName}> { formatTime(milliseconds) } </h4>
+    return <h4 className={cName}> { formatTime(remainingTime) } </h4>
 }
 
 export default Timer;

@@ -5,6 +5,6 @@ import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <HomePage playerColor={ Date.now() % 2 == 0 ? "w" : "w"} />
+    <HomePage playerColor={ Date.now() % 2 == 0 ? "w" : "b"} />
   </React.StrictMode>,
 )
