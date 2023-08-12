@@ -10,6 +10,7 @@ const spawn = require('child_process').spawn;
 
 app.get('/', function(req, res, next) {
     console.log("Processing get request");
+    res.json({"hi" : "bye"});
 });
 
 app.post('/chess', jsonParser, function(req, res, next) {
