@@ -8,6 +8,10 @@ const jsonParser = bodyParser.json();
 
 const spawn = require('child_process').spawn;
 
+app.get('/', function(req, res, next) {
+    console.log("Processing get request");
+});
+
 app.post('/chess', jsonParser, function(req, res, next) {
     const child = spawn('./src/backend/juliette', ['cli'], {
         detached: false,
