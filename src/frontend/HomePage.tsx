@@ -38,6 +38,26 @@ function updateHistory(history: string[]) {
     pgnString += " ";
 }
 
+function copyToClipBoard(textToCopy: string) {
+    const textArea = document.createElement("textarea");
+    textArea.value = textToCopy;
+        
+    // Move textarea out of the viewport so it's not visible
+    textArea.style.position = "absolute";
+    textArea.style.left = "-999999px";
+        
+    document.body.prepend(textArea);
+    textArea.select();
+
+    try {
+        document.execCommand('copy');
+    } catch (error) {
+        console.error(error);
+    } finally {
+        textArea.remove();
+    }
+}
+
 function HomePage({ playerColor, startTime, increment } : HomePageProps) : JSX.Element {
     const [ state, setState ] = useState(0);
     const [ turn, setTurn ] = useState(playerColor === "w" ? 2 : 0);
@@ -208,8 +228,7 @@ function HomePage({ playerColor, startTime, increment } : HomePageProps) : JSX.E
                     <h3> Game Over! </h3>
                     <p> { lossReason } </p>
                     <button className="end-screen-button" onClick={() => {
-                        navigator.clipboard.writeText(pgnString);
-                        console.log(pgnString);
+                        copyToClipBoard(pgnString);
                     }}> Copy PGN </button>
 
                     <button className="end-screen-button" onClick={() => {
