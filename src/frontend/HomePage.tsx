@@ -209,6 +209,7 @@ function HomePage({ playerColor, startTime, increment } : HomePageProps) : JSX.E
                     <p> { lossReason } </p>
                     <button className="end-screen-button" onClick={() => {
                         navigator.clipboard.writeText(pgnString);
+                        console.log(pgnString);
                     }}> Copy PGN </button>
 
                     <button className="end-screen-button" onClick={() => {
