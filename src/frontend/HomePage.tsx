@@ -8,7 +8,6 @@ import Timer from './components/Timer';
 import './HomePage.css';
 
 const deployURL: string = 'http://3.91.131.162:3000/chess';
-const devURL: string = 'http://localhost:3000/chess';
 
 interface HomePageProps {
     playerColor: string;
