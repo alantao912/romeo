@@ -236,7 +236,8 @@ function HomePage({ playerColor, startTime, increment } : HomePageProps) : JSX.E
                         game.reset();
                         setEngineTime(startTime);
                         setPlayerTime(startTime);
-                        setTurn(playerColor === "w" ? 2 : 0)
+                        setTurn(playerColor === "w" ? 2 : 0);
+                        pgnString = "";
                     }}> Home </button>
                 </>
             );
