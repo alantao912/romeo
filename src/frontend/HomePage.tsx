@@ -7,8 +7,13 @@ import { Chessboard } from 'react-chessboard';
 import Timer from './components/Timer';
 import './HomePage.css';
 
+const deployURL: string = 'http://3.91.131.162:3000/chess';
+const devURL: string = 'http://localhost:3000/chess';
+
 interface HomePageProps {
     playerColor: string;
+    startTime: number;
+    increment: number;
 }
 
 interface ReturnValue {
@@ -28,20 +33,20 @@ function getHistory(history: string[]) : string {
     return output;
 }
 
-function HomePage({ playerColor } : HomePageProps) : JSX.Element {
+function HomePage({ playerColor, startTime, increment } : HomePageProps) : JSX.Element {
     const [ state, setState ] = useState(0);
     const [ turn, setTurn ] = useState(playerColor === "w" ? 2 : 0);
 
     const [ game, setGame ] = useState(new Chess());
 
-    const [ playerTime, setPlayerTime ] = useState(3000);
-    const [ engineTime, setEngineTime ] = useState(3000);
+    const [ playerTime, setPlayerTime ] = useState(startTime);
+    const [ engineTime, setEngineTime ] = useState(startTime);
 
     const [ numEngineMoves, setNumEngineMoves ] = useState(0);
 
     useEffect(() => {
         if (numEngineMoves != 0) {
-            setTimeout(() => setEngineTime(engineTime + 50), 100);
+            setTimeout(() => setEngineTime(engineTime + increment), 100);
         }
     }, [numEngineMoves]);
 
@@ -60,7 +65,7 @@ function HomePage({ playerColor } : HomePageProps) : JSX.Element {
         headers.set('Content-Type', 'application/json');
         headers.set('Accept', 'application/json');
 
-        const request: RequestInfo = new Request('http://3.91.131.162:3000/chess', {
+        const request: RequestInfo = new Request(deployURL, {
             // We need to set the `method` to `POST` and assign the headers
             method: 'POST',
             headers: headers,
@@ -117,7 +122,7 @@ function HomePage({ playerColor } : HomePageProps) : JSX.Element {
                     return { isLegal: false, newPosition: ""};
                 }
                 setTurn(1);
-                setTimeout(() => setPlayerTime(playerTime + 50), 100);
+                setTimeout(() => setPlayerTime(playerTime + increment), 100);
                 return { isLegal: true, newPosition: gameCopy.fen() };
             }
 
@@ -200,8 +205,8 @@ function HomePage({ playerColor } : HomePageProps) : JSX.Element {
                     <button className="end-screen-button" onClick={() => {
                         setState(0);
                         game.reset();
-                        setEngineTime(3000);
-                        setPlayerTime(3000);
+                        setEngineTime(startTime);
+                        setPlayerTime(startTime);
                         setTurn(playerColor === "w" ? 2 : 0)
                     }}> Home </button>
                 </>
