@@ -60,7 +60,7 @@ function HomePage({ playerColor } : HomePageProps) : JSX.Element {
         headers.set('Content-Type', 'application/json');
         headers.set('Accept', 'application/json');
 
-        const request: RequestInfo = new Request('http://localhost:3000/chess', {
+        const request: RequestInfo = new Request('http://3.91.131.162:3000/chess', {
             // We need to set the `method` to `POST` and assign the headers
             method: 'POST',
             headers: headers,

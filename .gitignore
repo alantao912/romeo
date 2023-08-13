@@ -24,4 +24,6 @@ dist-ssr
 *.sw?
 
 .gitignore
-juliette
+*/juliette
+deploy.sh
+nginx_signing.key
