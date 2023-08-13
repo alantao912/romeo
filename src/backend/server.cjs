@@ -31,7 +31,6 @@ app.post('/chess', jsonParser, function(req, res, next) {
             res.json({"bestmove" : data.toString().substring(flagIndex + flag.length).trim()});
         }
     });
-    console.log(req.body.remainingTime);
 });
 
 

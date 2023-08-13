@@ -21,15 +21,21 @@ interface ReturnValue {
 }
 
 let lossReason: string = "";
+
+let halfMoves: number = 0;
+let pgnString: string = "";
+
 let firstMove: boolean = false;
 
-function getHistory(history: string[]) : string {
-    let output: string = "";
-    history.map((item) => { 
-        output += item; 
-        console.log(item);
-    });
-    return output;
+function updateHistory(history: string[]) {
+    if (halfMoves % 2 === 1) {
+        pgnString += ((halfMoves + 1) / 2) + ". ";
+    }
+    pgnString += history[0];
+    if (halfMoves % 2 === 1) {
+        pgnString += ",";
+    }
+    pgnString += " ";
 }
 
 function HomePage({ playerColor, startTime, increment } : HomePageProps) : JSX.Element {
@@ -81,6 +87,8 @@ function HomePage({ playerColor, startTime, increment } : HomePageProps) : JSX.E
                     prom = bestMove[4];
                 }
                 gameCopy.move({ from: bestMove.substring(0, 2), to: bestMove.substring(2, 4), promotion: prom});
+                ++halfMoves;
+                updateHistory(gameCopy.history({verbose : false}));
                 setGame(gameCopy);
                 setNumEngineMoves(numEngineMoves + 1);
                 setTurn(2);
@@ -93,7 +101,7 @@ function HomePage({ playerColor, startTime, increment } : HomePageProps) : JSX.E
             console.log("Caught error: " + error);
         });
     }
-
+    game.moveNumber
     switch (state) {
         case 0:
             return (
@@ -115,6 +123,8 @@ function HomePage({ playerColor, startTime, increment } : HomePageProps) : JSX.E
                 const gameCopy: Chess = new Chess(game.fen());
                 try {
                     gameCopy.move({ from: sourceSquare, to: targetSquare, promotion: piece[1].toLowerCase() ?? "q"});
+                    ++halfMoves;
+                    updateHistory(gameCopy.history({ verbose: false }));
                     setGame(gameCopy);
                 } 
                 catch {
@@ -198,7 +208,7 @@ function HomePage({ playerColor, startTime, increment } : HomePageProps) : JSX.E
                     <h3> Game Over! </h3>
                     <p> { lossReason } </p>
                     <button className="end-screen-button" onClick={() => {
-                        navigator.clipboard.writeText(getHistory(game.history({verbose: false})));
+                        navigator.clipboard.writeText(pgnString);
                     }}> Copy PGN </button>
 
                     <button className="end-screen-button" onClick={() => {
