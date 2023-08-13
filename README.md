@@ -4,4 +4,4 @@
 Web interface for playing against [juliette](https://www.github.com/alantao912/juliette). 
 
 ## Technology
-Written using ReactJS, TypeScript, and ExpressJS. Deployed on an AWS EC2 instance.
+Written using ReactJS, TypeScript, and ExpressJS. [Deployed](http://www.play-juliette.net:5173) on an AWS EC2 instance.
